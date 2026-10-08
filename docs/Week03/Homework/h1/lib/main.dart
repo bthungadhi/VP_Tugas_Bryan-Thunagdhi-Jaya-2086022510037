@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.dark, // Default menggunakan Dark Theme
+      themeMode: ThemeMode.dark, // 
       home: const CollectionScreen(),
     );
   }
