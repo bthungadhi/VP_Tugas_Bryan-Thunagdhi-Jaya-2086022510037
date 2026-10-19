@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_spacing.dart';
+import 'add_photocard_screen.dart';
 import 'data/sample_cards.dart';
 import 'models/photocard.dart';
+import 'vault_stats_screen.dart';
 import 'widgets/collection_grid.dart';
 import 'widgets/collection_search_bar.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/tag_filter_row.dart';
+import 'widgets/vault_content_header.dart';
+import 'widgets/vault_header.dart';
+import 'widgets/vault_sidebar.dart';
 
 enum DatasetType { normal, longList500, empty }
 
@@ -13,11 +18,7 @@ class CollectionScreen extends StatefulWidget {
   final VoidCallback? onToggleTheme;
   final bool isDarkMode;
 
-  const CollectionScreen({
-    super.key,
-    this.onToggleTheme,
-    this.isDarkMode = true,
-  });
+  const CollectionScreen({super.key, this.onToggleTheme, this.isDarkMode = true});
 
   @override
   State<CollectionScreen> createState() => _CollectionScreenState();
@@ -77,9 +78,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
 
   void _toggleOwned(String id) {
     setState(() {
-      _cards = [
-        for (final c in _cards) c.id == id ? c.copyWith(owned: !c.owned) : c,
-      ];
+      _cards = [for (final c in _cards) c.id == id ? c.copyWith(owned: !c.owned) : c];
     });
   }
 
@@ -88,10 +87,34 @@ class _CollectionScreenState extends State<CollectionScreen> {
       _query = '';
       _selectedTag = null;
       _searchController.clear();
-      if (_datasetType == DatasetType.empty) {
-        _loadDataset(DatasetType.normal);
-      }
+      if (_datasetType == DatasetType.empty) _loadDataset(DatasetType.normal);
     });
+  }
+
+  Future<void> _navigateToAddScreen() async {
+    final newCard = await Navigator.push<Photocard>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddPhotocardScreen(isDarkMode: widget.isDarkMode),
+      ),
+    );
+    if (newCard != null) {
+      setState(() {
+        _cards.insert(0, newCard);
+      });
+    }
+  }
+
+  void _navigateToStatsScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VaultStatsScreen(
+          cards: _cards,
+          isDarkMode: widget.isDarkMode,
+        ),
+      ),
+    );
   }
 
   @override
@@ -101,133 +124,22 @@ class _CollectionScreenState extends State<CollectionScreen> {
     final isDark = widget.isDarkMode;
 
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(64),
-        child: Container(
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF16161D) : Colors.white,
-            border: Border(
-              bottom: BorderSide(
-                color: isDark ? const Color(0xFF272732) : const Color(0xFFE4E4E7),
-                width: 1,
-              ),
-            ),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          primaryColor,
-                          primaryColor.withOpacity(0.7),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: primaryColor.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.style_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'PHOTOCARD VAULT',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.8,
-                            color: isDark ? Colors.white : const Color(0xFF18181F),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          'Digital K-Pop Collectibles Gallery',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: isDark ? const Color(0xFF71717A) : const Color(0xFFA1A1AA),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      isDark ? Icons.wb_sunny_rounded : Icons.nightlight_round,
-                      color: primaryColor,
-                      size: 20,
-                    ),
-                    tooltip: 'Toggle Theme Mode',
-                    onPressed: widget.onToggleTheme,
-                  ),
-                  PopupMenuButton<DatasetType>(
-                    icon: Icon(Icons.tune_rounded, color: primaryColor, size: 20),
-                    tooltip: 'Select Test Dataset',
-                    onSelected: _loadDataset,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    color: isDark ? const Color(0xFF18181F) : Colors.white,
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: DatasetType.normal,
-                        child: Row(
-                          children: [
-                            Icon(Icons.collections_rounded, size: 18),
-                            SizedBox(width: 8),
-                            Text('Normal List (6 Cards)'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: DatasetType.longList500,
-                        child: Row(
-                          children: [
-                            Icon(Icons.format_list_bulleted_rounded, size: 18),
-                            SizedBox(width: 8),
-                            Text('Long List (500 Cards)'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: DatasetType.empty,
-                        child: Row(
-                          children: [
-                            Icon(Icons.inbox_rounded, size: 18),
-                            SizedBox(width: 8),
-                            Text('Empty State (0 Cards)'),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+      appBar: VaultHeader(
+        isDarkMode: isDark,
+        onToggleTheme: widget.onToggleTheme,
+        onOpenStats: _navigateToStatsScreen,
+        onSelectDataset: (index) {
+          if (index == 0) _loadDataset(DatasetType.normal);
+          if (index == 1) _loadDataset(DatasetType.longList500);
+          if (index == 2) _loadDataset(DatasetType.empty);
+        },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _navigateToAddScreen,
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('Add Card', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -235,10 +147,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
               ? const RadialGradient(
                   center: Alignment(-0.8, -0.8),
                   radius: 1.5,
-                  colors: [
-                    Color(0xFF132B1F), // Ambient Green Glow
-                    Color(0xFF0F0F12), // Deep Charcoal
-                  ],
+                  colors: [Color(0xFF132B1F), Color(0xFF0F0F12)],
                   stops: [0.0, 0.6],
                 )
               : null,
@@ -247,268 +156,58 @@ class _CollectionScreenState extends State<CollectionScreen> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final isTablet = constraints.maxWidth >= 600;
-
             if (isTablet) {
-              // Wide Screen / Tablet Dashboard Layout
               return Row(
                 children: [
-                  SizedBox(
-                    width: 310,
-                    child: Container(
-                      margin: const EdgeInsets.all(AppSpacing.md),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF18181F) : Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: isDark ? const Color(0xFF272732) : const Color(0xFFE4E4E7),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(isDark ? 0.3 : 0.04),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        child: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(Icons.tune, color: primaryColor, size: 18),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'VAULT CONTROLS',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.5,
-                                      color: isDark ? Colors.white : const Color(0xFF18181F),
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              CollectionSearchBar(
-                                controller: _searchController,
-                                onChanged: (v) => setState(() => _query = v),
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              Text(
-                                'Categories',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: primaryColor,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: AppSpacing.xs),
-                              TagFilterRow(
-                                tags: cardTags,
-                                selected: _selectedTag,
-                                onSelected: (t) => setState(() => _selectedTag = t),
-                              ),
-                              const Padding(
-                                padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-                                child: Divider(height: 1),
-                              ),
-                              _buildProgressCard(primaryColor, isDark),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                  VaultSidebar(
+                    isDark: isDark,
+                    searchController: _searchController,
+                    onSearchChanged: (v) => setState(() => _query = v),
+                    selectedTag: _selectedTag,
+                    onTagSelected: (t) => setState(() => _selectedTag = t),
+                    totalVisible: _visible.length,
+                    ownedCount: _visible.where((c) => c.owned).length,
                   ),
                   Expanded(
                     child: Column(
                       children: [
-                        _buildContentHeader(primaryColor, isDark),
-                        Expanded(child: _buildGridBody()),
+                        VaultContentHeader(
+                          total: _visible.length,
+                          isDark: isDark,
+                          hasFilter: _query.isNotEmpty || _selectedTag != null,
+                          onResetFilter: _resetSearchAndFilter,
+                        ),
+                        Expanded(child: _buildGridBody(primaryColor)),
                       ],
                     ),
                   ),
                 ],
               );
-            } else {
-              // Mobile Layout
-              return Column(
-                children: [
-                  CollectionSearchBar(
-                    controller: _searchController,
-                    onChanged: (v) => setState(() => _query = v),
-                  ),
-                  TagFilterRow(
-                    tags: cardTags,
-                    selected: _selectedTag,
-                    onSelected: (t) => setState(() => _selectedTag = t),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Expanded(child: _buildGridBody()),
-                ],
-              );
             }
+            return Column(
+              children: [
+                CollectionSearchBar(
+                  controller: _searchController,
+                  onChanged: (v) => setState(() => _query = v),
+                ),
+                TagFilterRow(
+                  tags: cardTags,
+                  selected: _selectedTag,
+                  onSelected: (t) => setState(() => _selectedTag = t),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Expanded(child: _buildGridBody(primaryColor)),
+              ],
+            );
           },
         ),
       ),
     );
   }
 
-  Widget _buildContentHeader(Color primaryColor, bool isDark) {
-    final total = _visible.length;
-    final activeFilters = <String>[];
-    if (_query.isNotEmpty) activeFilters.add('Search: "$_query"');
-    if (_selectedTag != null) activeFilters.add('Tag: $_selectedTag');
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'My Collection Vault',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -0.5,
-                  color: isDark ? Colors.white : const Color(0xFF18181F),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'Showing $total photocards in gallery',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isDark ? const Color(0xFFA1A1AA) : const Color(0xFF71717A),
-                ),
-              ),
-            ],
-          ),
-          if (activeFilters.isNotEmpty)
-            ActionChip(
-              avatar: const Icon(Icons.clear_rounded, size: 14),
-              label: Text(
-                'Clear (${activeFilters.length})',
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-              ),
-              onPressed: _resetSearchAndFilter,
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgressCard(Color primaryColor, bool isDark) {
-    final total = _visible.length;
-    final ownedCount = _visible.where((c) => c.owned).length;
-    final progress = total > 0 ? (ownedCount / total) : 0.0;
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: primaryColor.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: primaryColor.withOpacity(0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.pie_chart_rounded, size: 16, color: primaryColor),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Vault Status',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF18181F),
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: primaryColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '${(progress * 100).toInt()}%',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: LinearProgressIndicator(
-              value: progress,
-              backgroundColor: primaryColor.withOpacity(0.18),
-              color: primaryColor,
-              minHeight: 8,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Visible Cards: $total',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: isDark ? const Color(0xFFA1A1AA) : const Color(0xFF71717A),
-                ),
-              ),
-              Text(
-                'Owned: $ownedCount',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: primaryColor,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGridBody() {
+  Widget _buildGridBody(Color primaryColor) {
     if (_isLoading) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Loading Vault Gallery...',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          ],
-        ),
-      );
+      return Center(child: CircularProgressIndicator(color: primaryColor));
     }
     final items = _visible;
     if (items.isEmpty) {
@@ -517,9 +216,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
             ? 'No photocards currently loaded in this vault.'
             : 'No photocards match your search query or category filter.',
         icon: Icons.search_off_rounded,
-        actionLabel: _datasetType == DatasetType.empty
-            ? 'Load Sample Cards'
-            : 'Reset Filters',
+        actionLabel: _datasetType == DatasetType.empty ? 'Load Sample Cards' : 'Reset Filters',
         onAction: _resetSearchAndFilter,
       );
     }

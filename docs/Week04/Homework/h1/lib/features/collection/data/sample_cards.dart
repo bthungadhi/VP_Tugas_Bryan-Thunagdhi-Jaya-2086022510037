@@ -48,7 +48,6 @@ const sampleCards = [
   ),
 ];
 
-/// Helper function to generate 500 items for testing long lists without shrinkWrap: true
 List<Photocard> generate500Cards() {
   final baseImages = [
     'assets/images/member1.jpg',
